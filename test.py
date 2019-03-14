@@ -5,13 +5,6 @@ import random
 import asyncio
 import config
 
-# This is for logging into a discord.log file
-""" logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler) """
-
 description = '''First iteration of discord attendance bot'''
 bot = commands.Bot(command_prefix='!', description=description)
 
@@ -86,14 +79,20 @@ async def create_poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add thi
     embed = discord.Embed(title=text, description='Results: \n ' + results, colour=0xDEADBF)
     await ctx.author.send("Your recent poll:", embed=embed)
     # NOTE: Also grabs other reactions that user might have added to message
-    
 """ async def list_servers():
     await bot.wait_until_ready()
     while not bot.is_closed:
         print("Current servers:")
-        for guild in bot.guilds:
-            print(guild.name)
-        await asyncio.sleep(1000)
+        for server in bot.servers:
+            print(server.name)
+        await asyncio.sleep(600)
+
+# This is for logging into a discord.log file
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 bot.loop.create_task(list_servers()) """
 bot.run(config.discordToken)
