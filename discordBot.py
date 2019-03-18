@@ -21,6 +21,9 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    print("Current servers:")
+    for guild in bot.guilds:
+        print(guild.name)
 
 @bot.command()
 async def hello(ctx):
@@ -79,21 +82,28 @@ async def create_poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add thi
     #       msg.reactions = [<Reaction emoji='👍' me=True count=2>,<Reaction emoji='👎' me=True count=2>]
     results = ''
     for reaction in msg.reactions:
+
+        # NOTE: for testing --------------
         print(reaction)
-        print(reaction.count)
-        results += reaction.emoji + ": " + format(reaction.count) + "\n \n"
+        print(reaction.count - 1) # minus 1 for bot
+        # --------------------------------
+
+        users = await reaction.users().flatten()
+
+        # Build the string of usernames for each response: 
+        listUsers = ''
+        if len(users) == 1:
+            listUsers = ' ...   '
+        for user in users[1:]: # Skip the bot
+            print(user) # this looks like stevenwhy#4936 might want to store the whole thing
+            listUsers += user.name + ", "
+        listUsers = listUsers[:-2]
+
+        results += reaction.emoji + ": " + format(reaction.count - 1) + "  ("+ listUsers + ")\n \n"
     
     embed = discord.Embed(title=text, description='Results: \n ' + results, colour=0xDEADBF)
-    await ctx.author.send("Your recent poll:", embed=embed)
+    # await ctx.author.send("Your recent poll:", embed=embed)
+    await ctx.send("Your recent poll:", embed=embed)
     # NOTE: Also grabs other reactions that user might have added to message
-    
-""" async def list_servers():
-    await bot.wait_until_ready()
-    while not bot.is_closed:
-        print("Current servers:")
-        for guild in bot.guilds:
-            print(guild.name)
-        await asyncio.sleep(1000)
-
-bot.loop.create_task(list_servers()) """
+        
 bot.run(config.discordToken)
