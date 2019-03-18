@@ -25,6 +25,8 @@ async def on_ready():
     for guild in bot.guilds:
         print(guild.name)
 
+# NOTE: the important command is at the bottom "create_poll()"
+
 @bot.command()
 async def hello(ctx):
     # we do not want the bot to reply to itself
@@ -95,7 +97,11 @@ async def create_poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add thi
         if len(users) == 1:
             listUsers = ' ...   '
         for user in users[1:]: # Skip the bot
-            print(user) # this looks like stevenwhy#4936 might want to store the whole thing
+            # user : looks like stevenwhy#4936 might want to store the whole thing
+
+            if reaction.emoji == u"\U0001F44D": # Sends message to user if they responded '👍'
+                await user.send("You've reacted " + reaction.emoji + " to the event")
+
             listUsers += user.name + ", "
         listUsers = listUsers[:-2]
 
