@@ -1,0 +1,7 @@
+TODO: Make this in requirements.txt format
+flask 
+flask-jsonpify 
+flask-sqlalchemy 
+flask-restful 
+PyMySQL 
+flask_marshmallow
