@@ -2,3 +2,4 @@ discord.log
 config.py
 __pycache__/
 testing.py
+slackbot/

@@ -4,6 +4,8 @@ import logging
 import random
 import asyncio
 import config
+import re
+import datetime
 
 # This is for logging into a discord.log file
 """ logger = logging.getLogger('discord')
@@ -111,5 +113,60 @@ async def create_poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add thi
     # await ctx.author.send("Your recent poll:", embed=embed)
     await ctx.send("Your recent poll:", embed=embed)
     # NOTE: Also grabs other reactions that user might have added to message
+
+
+@bot.command()
+async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
+    n = len(text)
+    if n == 0 or text[0] == "help":
+        await ctx.send("Create an event like: `!create_event [Event Name]`")
+        return
+    
+    eventName = ""
+    for i in range(int(n)):
+        eventName = eventName + text[i] + " "
+    eventName = eventName[:-1]
+    msg = await ctx.send("Creating event called: " + eventName + " ... when is it?\n Example: `HH:MMpm MM/DD` \n     or   `12:00am 12/12`")
+    channel = msg.channel
+    
+
+    goodDate = False
+
+    while(not goodDate):
+        def check(m):
+            return m.author == ctx.author and m.channel == channel
+
+        reply = await bot.wait_for('message', check=check)
+        date = reply.content
+        print("Trying to get event details: " + date)
+        date_match = re.search(r'(\d+/\d+)',date)
+        time_match = re.search(r'((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm]))',date)
+
+        if date_match:
+            try:
+                
+                eventDate = date_match.group()
+                datetime.datetime.strptime(eventDate,"%m/%d")
+                if time_match:
+                    eventTime = time_match.group()
+                    print(eventTime)
+                    goodDate = True
+
+                else:
+                    await ctx.send("I didn't recognize that time format. Keep it like '4:00pm'")
+
+            except ValueError as err:
+                await ctx.send("I didn't recognize a valid date. Keep it like 'MM/DD'")
+            
+            print(eventDate)
+            
+        else:
+            await ctx.send("I didn't recognize that date format. Keep it like 'MM/DD'")
         
+    await ctx.send("OK thanks, saving "+ eventName + " at " + eventTime + " on " + eventDate)
+
+    # NOTE: At this point we have eventName, eventTime, and eventDate
+    # call api HERE with these strings to save them
+
+
 bot.run(config.discordToken)
