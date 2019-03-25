@@ -35,9 +35,8 @@ class Event(db.Model):
     creator = db.relationship('User',
                               backref=db.backref('events', lazy='dynamic'))
 
-    def __init__(self, title, creation_date, occurence_date, creator_id):
+    def __init__(self, title, occurence_date, creator_id):
         self.title = title
-        self.creation_date = creation_date
         self.occurence_date = occurence_date
         self.creator_id = creator_id
 
@@ -58,6 +57,12 @@ class Signup(db.Model):
                          nullable=False)
     event = db.relationship('Event',
                             backref=db.backref('signups', lazy='dynamic'))
+    response = db.Column(db.Integer, required=True)
+
+    def __init__(self, user_id, event_id, response):
+        self.user_id = user_id
+        self.event_id = event_id
+        self.response = response
 
 
 class Poll(db.Model):
@@ -119,6 +124,7 @@ class SignupSchema(ma.Schema):
     signup_date = fields.DateTime()
     user_id = fields.Integer(required=True)
     event_id = fields.Integer(required=True)
+    response = fields.Integer(required=True)
 
 
 class VoteSchema(ma.Schema):
