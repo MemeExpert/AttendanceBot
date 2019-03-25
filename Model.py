@@ -1,4 +1,3 @@
-from flask import Flask
 from marshmallow import Schema, fields, pre_load, validate
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
@@ -10,12 +9,11 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename = "users"
     id = db.Column(db.Integer, primary_key=True)
-    discordName = db.Column(db.String(150))
-    slackName = db.Column(db.String(150))
-    displayName = db.Column(db.String(150))
+    discordName = db.Column(db.String, unique=True, nullable=False)
+    slackName = db.Column(db.String)
+    displayName = db.Column(db.String, nullable=False)
 
-    def __init__(self, id, discordName, slackName, displayName):
-        self.id = id
+    def __init__(self, discordName, slackName, displayName):
         self.discordName = discordName
         self.slackName = slackName
         self.displayName = displayName
@@ -37,8 +35,7 @@ class Event(db.Model):
     creator = db.relationship('User',
                               backref=db.backref('events', lazy='dynamic'))
 
-    def __init__(self, id, title, creation_date, occurence_date, creator_id):
-        self.id = id
+    def __init__(self, title, creation_date, occurence_date, creator_id):
         self.title = title
         self.creation_date = creation_date
         self.occurence_date = occurence_date
@@ -104,9 +101,9 @@ class Vote(db.Model):
 
 class UserSchema(ma.Schema):
     id = fields.Integer()
-    displayName = fields.String(required=True, validate=validate.Length(1))
-    slackName = fields.String(required=True, validate=validate.Length(1))
-    discordName = fields.String(required=True, validate=validate.Length(1))
+    displayName = fields.Str()
+    slackName = fields.Str()
+    discordName = fields.Str()
 
 
 class EventSchema(ma.Schema):
@@ -141,4 +138,3 @@ class Poll_OptionsSchema(ma.Schema):
     id = fields.Integer()
     title = fields.String(required=True, validate=validate.Length(1))
     creation_date = fields.DateTime()
-
