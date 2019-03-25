@@ -9,8 +9,14 @@ ma = Marshmallow()
 
 class UserResource(Resource):
     def get(self):
-        users = User.query.all()
-        users = user_schema.dump(users).data
+        json_data = request.get_json(force=True)
+        if not json_data:  # If nothing is provided, return all users
+            users = User.query.all()
+        else:
+            # Validate and deserialize input
+            data = user_schema.load(json_data)
+            users = User.query.filter_by(id=data['id']).first()
+        users = user_schema.dump(users)
         return {'status': 'success', 'data': users}, 200
 
     def post(self):
