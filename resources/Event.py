@@ -10,12 +10,14 @@ ma = Marshmallow()
 class EventResource(Resource):
     def get(self):
         json_data = request.get_json(force=True)
-        if not json_data:  # If nothing is provided, return all events
-            events = Event.query.all()
-        else:
-            # Validate and deserialize input
-            data = event_schema.load(json_data)
-            events = Event.query.filter_by(id=data['id']).first()
+        if 'id' in json_data:  # filter by event ID, so just return 1 object
+            events = Event.query.filter_by(id=json_data['id']).first()
+            if not events:
+                return {'message': 'Event does not exist'}, 400
+        elif 'creator_id' in json_data:  # return all events that the user created
+            events = Event.query.filter_by(creator_id=json_data['creator_id'])
+            if not events:
+                return {'message': 'No events created by specified user'}, 400
         events = event_schema.dump(events)
         return {'status': 'success', 'data': events}, 200
 

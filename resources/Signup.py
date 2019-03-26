@@ -10,12 +10,16 @@ ma = Marshmallow()
 class SignupResource(Resource):
     def get(self):
         json_data = request.get_json(force=True)
-        if not json_data:  # If nothing is provided, return all signups
-            signups = Signup.query.all()
+        if 'id' in json_data:  # If nothing is provided, return all signups
+            signups = Signup.query.filter_by(id=json_data['id']).first()
+            if not signups:
+                return {'message': 'Signup does not exist'}, 400
+        elif 'user_id' in json_data:
+            signups = Signup.query.filter_by(user_id=json_data['user_id']).first()
+            if not signups:
+                return {'message': 'Specified user has no signups'}, 400
         else:
-            # Validate and deserialize input
-            data = signup_schema.load(json_data)
-            signups = Signup.query.filter_by(id=data['id']).first()
+            signups = Signup.query.all()
         signups = signup_schema.dump(signups)
         return {'status': 'success', 'data': signups}, 200
 

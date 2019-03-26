@@ -16,6 +16,8 @@ class UserResource(Resource):
             # Validate and deserialize input
             data = user_schema.load(json_data)
             users = User.query.filter_by(id=data['id']).first()
+            if not users:
+                return {'message': "User does not exist"}, 400
         users = user_schema.dump(users)
         return {'status': 'success', 'data': users}, 200
 
