@@ -1,4 +1,5 @@
 discord.log
+migrations/
 config.py
 __pycache__/
 testing.py

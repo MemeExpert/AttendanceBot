@@ -1,0 +1,25 @@
+import os
+
+# Database Config
+DatabaseHost = "localhost"
+DatabasePort = 3306
+DatabaseUser = ""
+DatabasePassword = ""
+DatabaseName = ""
+
+# Discord Bot Config
+DiscordBotToken = ""
+
+# Slack Bot Config
+SlackBotToken = ""
+
+# SQL Alchemy config:
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_ECHO = False
+SQLALCHEMY_TRACK_MODIFICATIONS = True
+SQLALCHEMY_DATABASE_URI = "mysql+pymysql://" +\
+                           DatabaseUser + ":" +\
+                           DatabasePassword + "@" +\
+                           DatabaseHost + "/" +\
+                           DatabaseName
