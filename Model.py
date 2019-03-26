@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, pre_load, validate
+from marshmallow import fields, validate
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 
@@ -9,9 +9,9 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename = "users"
     id = db.Column(db.Integer, primary_key=True)
-    discordName = db.Column(db.String, unique=True, nullable=False)
-    slackName = db.Column(db.String)
-    displayName = db.Column(db.String, nullable=False)
+    discordName = db.Column(db.String(150), unique=True, nullable=False)
+    slackName = db.Column(db.String(150))
+    displayName = db.Column(db.String(150), nullable=False)
 
     def __init__(self, discordName, slackName, displayName):
         self.discordName = discordName
@@ -57,7 +57,7 @@ class Signup(db.Model):
                          nullable=False)
     event = db.relationship('Event',
                             backref=db.backref('signups', lazy='dynamic'))
-    response = db.Column(db.Integer, required=True)
+    response = db.Column(db.Integer, nullable=False)
 
     def __init__(self, user_id, event_id, response):
         self.user_id = user_id
