@@ -3,21 +3,31 @@ from flask_restful import Resource
 from Model import db, Event, EventSchema
 from flask_marshmallow import Marshmallow
 
-event_schema = EventSchema()
+event_schema = EventSchema(many=True)
 ma = Marshmallow()
 
 
 class EventResource(Resource):
     def get(self):
-        json_data = request.get_json(force=True)
-        if 'id' in json_data:  # filter by event ID, so just return 1 object
-            events = Event.query.filter_by(id=json_data['id']).first()
-            if not events:
+        query = Event.query
+
+        if 'id' in request.args:
+            print("filtering event by id")
+            query = query.filter_by(id=request.args['id'])
+            if not query:
                 return {'message': 'Event does not exist'}, 400
-        elif 'creator_id' in json_data:  # return all events that the user created
-            events = Event.query.filter_by(creator_id=json_data['creator_id'])
-            if not events:
+
+        if 'creator_id' in request.args:
+            print("filtering event by creator_id")
+            query = query.filter_by(creator_id=request.args['creator_id'])
+            if not query:
                 return {'message': 'No events created by specified user'}, 400
+
+        if len(request.args) == 0:
+            return {'message': 'No parameters specified'}, 400
+
+        print(query)
+        events = query.all()
         events = event_schema.dump(events)
         return {'status': 'success', 'data': events}, 200
 
