@@ -3,21 +3,21 @@ from flask_restful import Resource
 from Model import db, User, UserSchema
 from flask_marshmallow import Marshmallow
 
-user_schema = UserSchema(many=True)
 ma = Marshmallow()
 
 
 class UserResource(Resource):
     def get(self):
+        user_schema = UserSchema(many=True)
         query = User.query
 
         if 'id' in request.args:
             print("getting user by id")
             query = query.filter_by(id=request.args['id'])
 
-        if 'discordName' in request.args:
-            print("getting user by discordName")
-            query = query.filter_by(discordName=request.args['discordName'])
+        if 'discordUserId' in request.args:
+            print("getting user by discordUserId")
+            query = query.filter_by(discordUserId=request.args['discordUserId'])
 
         if 'slackName' in request.args:
             print("getting user by slackName")
@@ -32,6 +32,7 @@ class UserResource(Resource):
         return {'status': 'success', 'data': users}, 200
 
     def post(self):
+        user_schema = UserSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
@@ -40,12 +41,12 @@ class UserResource(Resource):
         data = user_schema.load(json_data)
         # if errors:
         #    return errors, 422
-        user = User.query.filter_by(discordName=data['discordName']).first()
+        user = User.query.filter_by(discordUserId=data['discordUserId']).first()
         if user:
             return {'message': 'User already exists'}, 400
         user = User(
             displayName=json_data['displayName'],
-            discordName=json_data['discordName'],
+            discordUserId=json_data['discordUserId'],
             slackName=json_data['slackName']
             )
 
@@ -56,6 +57,7 @@ class UserResource(Resource):
         return {"status": 'success', 'data': result}, 201
 
     def put(self):
+        user_schema = UserSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
@@ -68,7 +70,7 @@ class UserResource(Resource):
             return {'message': 'User does not exist'}, 400
 
         user.displayName = data['displayName'],
-        user.discordName = data['discordName'],
+        user.discordUserId = data['discordUserId'],
         user.slackName = data['slackName']
 
         db.session.commit()
@@ -77,6 +79,7 @@ class UserResource(Resource):
         return {"status": 'success', 'data': result}, 204
 
     def delete(self):
+        user_schema = UserSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
