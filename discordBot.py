@@ -286,5 +286,41 @@ async def get_user(ctx, id):
     print(r.url)
     print(r.json())
 
+@bot.command()
+async def register(ctx, displayName):
+    id = int(ctx.author.id)
 
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordName":id})
+
+    if r.json()["data"][0]:
+        print("User already exists")
+        await ctx.author.send("You have already registered!")
+        return
+
+    payload = {'displayName':displayName, 'discordName':id}
+    r = requests.request('POST','http://127.0.0.1:5000/api/user', data=json.dumps(payload))
+
+    # TODO: reply to the user here
+    print(r.status_code)
+
+@bot.command()
+async def update(ctx, *text):
+    if len(text) == 0 or text[0] == "help":
+        await ctx.send("Update your info on the bot with `!update [new-display-name]`")
+        return
+
+    id = int(ctx.author.id)
+
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordName":id})
+
+    if not r.json()["data"][0]:
+        print("nothing to update")
+        await ctx.author.send("You can't update because you haven't registered. Use: \n`!register [display-name]`")
+        return
+    
+    payload = {"displayName":text[0],"discordName":id}
+    r = requests.request('PUT','http://127.0.0.1:5000/api/user', params=json.dumps(payload))
+    print(r.status_code)
+
+    # TODO: reply to the user here
 bot.run(config.discordToken)
