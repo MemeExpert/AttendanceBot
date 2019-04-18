@@ -7,6 +7,8 @@ import config
 import re
 import datetime
 import time
+import requests
+import json
 
 # This is for logging into a discord.log file
 """ logger = logging.getLogger('discord')
@@ -142,7 +144,7 @@ async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to us
 
     attendeeList = []
     notAttendeeList = []
-    t_end = time.time() + 61 * 1
+    t_end = time.time() + 61 * 10
 
     # TODO: handle unreacting?
     while(time.time() < t_end):
@@ -150,26 +152,26 @@ async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to us
             return (str(reaction.emoji) == '👍' or str(reaction.emoji) == '👎') and not user.bot
 
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            reaction, user = await bot.wait_for('reaction_add', timeout=600.0, check=check)
         except asyncio.TimeoutError:
-            await channel.send('Timeout')
+            await channel.send('Ok let me add up the people')
             break
         else:
-            await channel.send("Thanks {0}, you said {1}".format(user.name, reaction.emoji))
+            # await channel.send("Thanks {0}, you said {1}".format(user.name, reaction.emoji))
             if(reaction.emoji == '👎'):
                 if str(user) in attendeeList: 
-                    await channel.send("Thanks {0}, removing you from `{1}`".format(user.name, eventName))
+                    # await channel.send("Thanks {0}, removing you from `{1}`".format(user.name, eventName))
                     attendeeList.remove(str(user))
                 if str(user) not in notAttendeeList: 
-                    await channel.send("Thanks {0}, adding you to notAttendeeList".format(user.name))
+                    # await channel.send("Thanks {0}, adding you to notAttendeeList".format(user.name))
                     notAttendeeList.append(str(user))
             
             elif(reaction.emoji == '👍'):
                 if str(user) in notAttendeeList: 
-                    await channel.send("Thanks {0}, removing you from notAttendeeList".format(user.name))
+                    # await channel.send("Thanks {0}, removing you from notAttendeeList".format(user.name))
                     notAttendeeList.remove(str(user))
                 if str(user) not in attendeeList: 
-                    await channel.send("Thanks {0}, adding you to `{1}`".format(user.name, eventName))
+                    # await channel.send("Thanks {0}, adding you to `{1}`".format(user.name, eventName))
                     attendeeList.append(str(user))
 
             print(attendeeList)
@@ -200,7 +202,7 @@ async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to us
     # ************************************************************************************************************
 
     print("Final list: {0}".format(attendeeList))
-    embed = discord.Embed(title=eventName, description='Results: \n {0} \n {1}'.format(attendeeList,notAttendeeList), colour=0xDEADBF)
+    embed = discord.Embed(title=eventName, description="Results: \n 👍 {0} \n \n  👎 {1}".format(attendeeList,notAttendeeList), colour=0xDEADBF)
     # await ctx.author.send("Your recent poll:", embed=embed)
     await ctx.send("Your recent poll:", embed=embed)
     # NOTE: Also grabs other reactions that user might have added to message
@@ -260,7 +262,8 @@ async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this
         
     await ctx.send("OK thanks, saving `"+ eventName + "` at `" + eventTime + "` on `" + eventDate + "`")
 
-    # NOTE: At this point we have eventName, eventTime, and eventDate
+    creatorId = ctx.author.id
+    # NOTE: At this point we have eventName, eventTime, eventDate, creatorId
     # call api HERE with these strings to save them
 
 @bot.command()
@@ -269,9 +272,19 @@ async def my_events(ctx):
     # embed = discord.Embed(title="Your events", description='Results: \n ' + results, colour=0xDEADBF)
     await ctx.author.send("Grabbing your events {0.name}...".format(user))
     
-    print(user)
+    print(user.id)
     # NOTE: Call API to get a user's created events as well as events they are attending
     # Parameter:
-    #       user
+    #       user.id
+
+
+@bot.command()
+async def get_user(ctx, id):
+    id = int(id)
+    
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"id":id})
+    print(r.url)
+    print(r.json())
+
 
 bot.run(config.discordToken)
