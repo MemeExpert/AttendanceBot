@@ -23,12 +23,19 @@ class UserResource(Resource):
             print("getting user by slackName")
             query = query.filter_by(slackName=request.args['slackName'])
 
+        if 'displayName' in request.args:
+            print("getting user by displayName")
+            query = query.filter_by(displayName=request.args['displayName'])
+
         if len(request.args) == 0:
             return {'message': 'No parameters specified'}, 400
 
         print(query)
         users = query.all()
         users = user_schema.dump(users)
+        if not users:
+            return {'message': 'Not found'}, 404
+
         return {'status': 'success', 'data': users}, 200
 
     def post(self):
