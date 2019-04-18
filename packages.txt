@@ -8,3 +8,4 @@ flask-migrate
 PyMySQL 
 flask_marshmallow
 marshmallow-sqlalchemy
+marshmallow --pre
