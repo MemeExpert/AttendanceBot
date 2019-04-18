@@ -9,12 +9,12 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename = "users"
     id = db.Column(db.Integer, primary_key=True)
-    discordName = db.Column(db.String(150), unique=True, nullable=False)
+    discordUserId = db.Column(db.Integer, unique=True, nullable=False)
     slackName = db.Column(db.String(150))
     displayName = db.Column(db.String(150), nullable=False)
 
-    def __init__(self, discordName, slackName, displayName):
-        self.discordName = discordName
+    def __init__(self, discordUserId, slackName, displayName):
+        self.discordUserId = discordUserId
         self.slackName = slackName
         self.displayName = displayName
 
@@ -108,7 +108,7 @@ class UserSchema(ma.Schema):
     id = fields.Integer()
     displayName = fields.Str()
     slackName = fields.Str()
-    discordName = fields.Str()
+    discordUserId = fields.Integer()
 
 
 class EventSchema(ma.Schema):
