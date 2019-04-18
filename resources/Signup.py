@@ -3,20 +3,37 @@ from flask_restful import Resource
 from Model import db, Signup, SignupSchema
 from flask_marshmallow import Marshmallow
 
-signup_schema = SignupSchema()
+signup_schema = SignupSchema(many=True)
 ma = Marshmallow()
 
 
 class SignupResource(Resource):
     def get(self):
-        json_data = request.get_json(force=True)
-        if not json_data:  # If nothing is provided, return all signups
-            signups = Signup.query.all()
-        else:
-            # Validate and deserialize input
-            data = signup_schema.load(json_data)
-            signups = Signup.query.filter_by(id=data['id']).first()
-        signups = signup_schema.dump(signups)
+        query = Signup.query
+
+        if 'id' in request.args:
+            query = query.filter_by(id=request.args['id'])
+            if not query:
+                return {'message': 'Signup does not exist'}, 400
+
+        if 'user_id' in request.args:
+            query = query.filter_by(user_id=request.args['user_id'])
+            if not query:
+                return {'message': 'No signups with that user_id'}, 400
+
+        if 'event_id' in request.args:
+            query = query.filter_by(event_id=request.args['event_id'])
+            if not query:
+                return {'message': 'No signups with that event_id'}, 400
+
+        if 'response' in request.args:
+            query = query.filter_by(response=request.args['response'])
+            if not query:
+                return {'message': 'No signups with that response'}, 400
+
+        print(query)
+        signups = Signup.query.all()
+        signups = signup_schema.dump(query)
         return {'status': 'success', 'data': signups}, 200
 
     def post(self):

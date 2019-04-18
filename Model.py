@@ -113,18 +113,18 @@ class UserSchema(ma.Schema):
 
 class EventSchema(ma.Schema):
     id = fields.Integer()
-    title = fields.String(required=True)
+    title = fields.String()
     creation_date = fields.DateTime()
-    occurence_date = fields.DateTime(required=True)
-    creator_id = fields.Integer(required=True)
+    occurence_date = fields.DateTime()
+    creator_id = fields.Integer()
 
 
 class SignupSchema(ma.Schema):
     id = fields.Integer()
     signup_date = fields.DateTime()
-    user_id = fields.Integer(required=True)
-    event_id = fields.Integer(required=True)
-    response = fields.Integer(required=True)
+    user_id = fields.Integer()
+    event_id = fields.Integer()
+    response = fields.Integer()
 
 
 class VoteSchema(ma.Schema):

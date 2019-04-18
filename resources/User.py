@@ -3,19 +3,31 @@ from flask_restful import Resource
 from Model import db, User, UserSchema
 from flask_marshmallow import Marshmallow
 
-user_schema = UserSchema()
+user_schema = UserSchema(many=True)
 ma = Marshmallow()
 
 
 class UserResource(Resource):
     def get(self):
-        json_data = request.get_json(force=True)
-        if not json_data:  # If nothing is provided, return all users
-            users = User.query.all()
-        else:
-            # Validate and deserialize input
-            data = user_schema.load(json_data)
-            users = User.query.filter_by(id=data['id']).first()
+        query = User.query
+
+        if 'id' in request.args:
+            print("getting user by id")
+            query = query.filter_by(id=request.args['id'])
+
+        if 'discordName' in request.args:
+            print("getting user by discordName")
+            query = query.filter_by(discordName=request.args['discordName'])
+
+        if 'slackName' in request.args:
+            print("getting user by slackName")
+            query = query.filter_by(slackName=request.args['slackName'])
+
+        if len(request.args) == 0:
+            return {'message': 'No parameters specified'}, 400
+
+        print(query)
+        users = query.all()
         users = user_schema.dump(users)
         return {'status': 'success', 'data': users}, 200
 
