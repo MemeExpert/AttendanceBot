@@ -1,6 +1,7 @@
 from marshmallow import fields, validate
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.mysql import BIGINT
 
 ma = Marshmallow()
 db = SQLAlchemy()
@@ -9,7 +10,7 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename = "users"
     id = db.Column(db.Integer, primary_key=True)
-    discordUserId = db.Column(db.Integer, unique=True, nullable=False)
+    discordUserId = db.Column(BIGINT(unsigned=True), unique=True, nullable=False)
     slackName = db.Column(db.String(150))
     displayName = db.Column(db.String(150), nullable=False)
 
