@@ -278,7 +278,8 @@ async def my_events(ctx):
     #       user.id
 
 
-@bot.command()
+# gets user by the id in db, not discord user id, pretty useless was for testing connection
+@bot.command() 
 async def get_user(ctx, id):
     id = int(id)
     
@@ -286,23 +287,25 @@ async def get_user(ctx, id):
     print(r.url)
     print(r.json())
 
+# adds new user to db. Command requires a displayname to add into db
 @bot.command()
 async def register(ctx, displayName):
     id = int(ctx.author.id)
 
-    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordName":id})
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
     if r.json()["data"][0]:
         print("User already exists")
         await ctx.author.send("You have already registered!")
         return
 
-    payload = {'displayName':displayName, 'discordName':id}
+    payload = {'displayName':displayName, 'discordUserId':id,'slackName':""}
     r = requests.request('POST','http://127.0.0.1:5000/api/user', data=json.dumps(payload))
 
     # TODO: reply to the user here
     print(r.status_code)
 
+# updates a user's displayname in db
 @bot.command()
 async def update(ctx, *text):
     if len(text) == 0 or text[0] == "help":
@@ -311,14 +314,14 @@ async def update(ctx, *text):
 
     id = int(ctx.author.id)
 
-    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordName":id})
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
     if not r.json()["data"][0]:
         print("nothing to update")
         await ctx.author.send("You can't update because you haven't registered. Use: \n`!register [display-name]`")
         return
     
-    payload = {"displayName":text[0],"discordName":id}
+    payload = {"displayName":text[0],"discordUserId":id}
     r = requests.request('PUT','http://127.0.0.1:5000/api/user', params=json.dumps(payload))
     print(r.status_code)
 
