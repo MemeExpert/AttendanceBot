@@ -30,106 +30,17 @@ async def on_ready():
     for guild in bot.guilds:
         print(guild.name)
 
-# NOTE: the important command is at the bottom "create_poll()"
+def checkUniqueDisplayName(displayName):
+    print(displayName)
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"displayName":displayName})
 
-@bot.command()
-async def hello(ctx):
-    # we do not want the bot to reply to itself
-    if ctx.author == bot.user:
-        return
-
-    msg = 'Hello {0.author.mention}'.format(ctx)
-    await ctx.send(msg)
-
-@bot.command()
-async def yesorno(ctx):
-    print("Trying to ask yes or no")
-    await ctx.send('Discord, yes or no?')
-    
-    def check(m):
-        print(m.author.id)
-        return ctx.message.author.id == m.author.id # and m.channel == ctx.channel
-
-    response = await bot.wait_for('message', check=check)
-    if response.content.lower() == 'yes':
-        await ctx.send('You said yes.')
-    elif response.content.lower() == 'no':
-        await ctx.send('You said no.')
-    else:
-        await ctx.send("That isn't a valid response.")
-
-@bot.command()
-async def add(ctx, left: int, right: int):
-    """Adds two numbers together."""
-    await ctx.author.send(left + right) # ctx.author.send to DM
-    await ctx.send("I sent you a DM with the answer")
-
-@bot.command(description='For when you wanna settle the score some other way')
-async def choose(ctx, *choices: str):
-    """Chooses between multiple choices given by user"""
-    await ctx.send(random.choice(choices))
-
-@bot.command()
-async def create_poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
-    eventName = text
-    msg = await ctx.send("Can you attend: `" + eventName + "` ?")
-    channel = msg.channel
-
-    reactions = {u"\U0001F44D", u"\U0001F44E"} # Hardcoded array of Python unicode for thumbs up and down
-    for reaction in reactions:
-        await msg.add_reaction(reaction)
-
-    # Asynchronous wait
-    await asyncio.sleep(5) # Time in seconds to wait until counting reactions
-
-    msg = await channel.get_message(msg.id) # Need to regrab the message using the stored message id
-
-    # msg.reactions is an array of Reaction objects. 
-    # One object per emoji that stores the emoji and the count
-    #   Example: 
-    #       msg.reactions = [<Reaction emoji='👍' me=True count=2>,<Reaction emoji='👎' me=True count=2>]
-    results = ''
-    attendeeList = []
-    for reaction in msg.reactions:
-
-        # NOTE: for testing --------------
-        print(reaction)
-        print(reaction.count - 1) # minus 1 for bot
-        # --------------------------------
-
-        users = await reaction.users().flatten()
-
-        # Build the string of usernames for each response: 
-        listUsers = ''
-        if len(users) == 1:
-            listUsers = ' ...   '
-        for user in users[1:]: # Skip the bot
-            # user : looks like stevenwhy#4936 might want to store the whole thing
-
-            if reaction.emoji == u"\U0001F44D": # Sends message to user if they responded '👍'
-                attendeeList.append(str(user))
-                await user.send(u"\U0001F44D" + " You're marked as attending `" + eventName + "`")
-
-            listUsers += user.name + ", "
-        listUsers = listUsers[:-2]
-
-        results += reaction.emoji + ": " + format(reaction.count - 1) + "  ("+ listUsers + ")\n \n"
-    
-
-    # NOTE: Call API to save usernames of people attending list **************************************************
-    # Parameters:
-    #       eventName    : name of event
-    #       attendeeList : list of usernames (with unique ID) marked as attending
-    # ************************************************************************************************************
-
-    print(attendeeList)
-    embed = discord.Embed(title=eventName, description='Results: \n ' + results, colour=0xDEADBF)
-    # await ctx.author.send("Your recent poll:", embed=embed)
-    await ctx.send("Your recent poll:", embed=embed)
-    # NOTE: Also grabs other reactions that user might have added to message
+    if not r.json().get("data"):
+        return True
+    return False
 
 @bot.command()
 async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
+    """Create an attendance poll given an event *INCOMPLETE*"""
     if (not text):
         ctx.send("Create an attendance poll using !poll [Event Name]")
         return
@@ -210,6 +121,7 @@ async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to us
 
 @bot.command()
 async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
+    """Create a new event *INCOMPLETE*"""
     n = len(text)
     if n == 0 or text[0] == "help":
         await ctx.send("Create an event like: `!create_event [Event Name]`")
@@ -268,6 +180,7 @@ async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this
 
 @bot.command()
 async def my_events(ctx):
+    """See the events you've created *INCOMPLETE*"""
     user = ctx.author
     # embed = discord.Embed(title="Your events", description='Results: \n ' + results, colour=0xDEADBF)
     await ctx.author.send("Grabbing your events {0.name}...".format(user))
@@ -279,24 +192,38 @@ async def my_events(ctx):
 
 
 # gets user by the id in db, not discord user id, pretty useless was for testing connection
-@bot.command() 
-async def get_user(ctx, id):
-    id = int(id)
+# @bot.command() 
+# async def get_user(ctx, id):
+#     """Grab user data from db given id *useless*"""
+#     id = int(id)
     
-    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"id":id})
-    print(r.url)
-    print(r.json())
+#     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"id":id})
+#     print(r.url)
+#     print(r.json())
 
 # adds new user to db. Command requires a displayname to add into db
 @bot.command()
-async def register(ctx, displayName):
+async def register(ctx, *displayName):
+    """Register yourself given a display name"""
     id = int(ctx.author.id)
+    if len(displayName) == 0 or displayName[0] == "help":
+        await ctx.send("Register your info on the bot with `!register [display-name]`")
+        return
+    
+    displayName = displayName[0]
 
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
-    if r.json()["data"][0]:
+    if r.json().get("data"):
+        data = r.json()["data"]
         print("User already exists")
-        await ctx.author.send("You have already registered!")
+        print(data)
+        await ctx.author.send("You have already registered!\nYour display name is `{0}`".format(data[0]["displayName"]))
+        return
+    
+    if not checkUniqueDisplayName(displayName):
+        print("Display name already exists")
+        await ctx.author.send("That display name is taken!")
         return
 
     payload = {'displayName':displayName, 'discordUserId':id,'slackName':""}
@@ -304,26 +231,41 @@ async def register(ctx, displayName):
 
     # TODO: reply to the user here
     print(r.status_code)
+    if r.status_code == 201:
+        await ctx.author.send("Thanks {0}, you have been added to the team!".format(displayName))
 
 # updates a user's displayname in db
 @bot.command()
 async def update(ctx, *text):
+    """Update your display name for the attendance bot"""
     if len(text) == 0 or text[0] == "help":
         await ctx.send("Update your info on the bot with `!update [new-display-name]`")
         return
 
     id = int(ctx.author.id)
 
+    displayName = text[0]
+
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
-    if not r.json()["data"][0]:
-        print("nothing to update")
+    if not r.json().get("data"):
+        print("Nothing to update")
         await ctx.author.send("You can't update because you haven't registered. Use: \n`!register [display-name]`")
         return
     
-    payload = {"displayName":text[0],"discordUserId":id}
-    r = requests.request('PUT','http://127.0.0.1:5000/api/user', params=json.dumps(payload))
+    if not checkUniqueDisplayName(displayName):
+        print("Display name already exists")
+        await ctx.author.send("That display name is taken!")
+        return
+
+    dbID = r.json()["data"][0]["id"]
+    payload = {"displayName":displayName,"discordUserId":id, "id":dbID, "slackName":""}
+    r = requests.request('PUT','http://127.0.0.1:5000/api/user', data=json.dumps(payload))
     print(r.status_code)
 
     # TODO: reply to the user here
+    if r.status_code == 204:
+        await ctx.author.send("Thanks {0}, your display name has been updated".format(displayName))
+
 bot.run(config.discordToken)
+
