@@ -209,8 +209,13 @@ async def register(ctx, *displayName):
     if len(displayName) == 0 or displayName[0] == "help":
         await ctx.send("Register your info on the bot with `!register [display-name]`")
         return
-    
+
     displayName = displayName[0]
+
+    if len(displayName) > 15:
+        print("Display name is too long")
+        await ctx.author.send("Display name can't be longer than 15 characters!")
+        return
 
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
@@ -220,7 +225,7 @@ async def register(ctx, *displayName):
         print(data)
         await ctx.author.send("You have already registered!\nYour display name is `{0}`".format(data[0]["displayName"]))
         return
-    
+
     if not checkUniqueDisplayName(displayName):
         print("Display name already exists")
         await ctx.author.send("That display name is taken!")
@@ -232,7 +237,8 @@ async def register(ctx, *displayName):
     # TODO: reply to the user here
     print(r.status_code)
     if r.status_code == 201:
-        await ctx.author.send("Thanks {0}, you have been added to the team!".format(displayName))
+        #await ctx.author.send("Thanks {0}, you have been added to the team!".format(displayName))
+        await ctx.message.add_reaction('✅')
 
 # updates a user's displayname in db
 @bot.command()
@@ -246,13 +252,18 @@ async def update(ctx, *text):
 
     displayName = text[0]
 
+    if len(displayName) > 15:
+        print("Display name is too long")
+        await ctx.author.send("Display name can't be longer than 15 characters!")
+        return
+
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":id})
 
     if not r.json().get("data"):
         print("Nothing to update")
         await ctx.author.send("You can't update because you haven't registered. Use: \n`!register [display-name]`")
         return
-    
+
     if not checkUniqueDisplayName(displayName):
         print("Display name already exists")
         await ctx.author.send("That display name is taken!")
@@ -263,9 +274,10 @@ async def update(ctx, *text):
     r = requests.request('PUT','http://127.0.0.1:5000/api/user', data=json.dumps(payload))
     print(r.status_code)
 
-    # TODO: reply to the user here
+    # reply to the user here
     if r.status_code == 204:
-        await ctx.author.send("Thanks {0}, your display name has been updated".format(displayName))
+        #await ctx.author.send("Thanks {0}, your display name has been updated".format(displayName))
+        await ctx.message.add_reaction('✅')
 
-bot.run(config.discordToken)
+bot.run(config.DiscordBotToken)
 
