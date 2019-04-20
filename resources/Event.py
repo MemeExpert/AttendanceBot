@@ -3,12 +3,12 @@ from flask_restful import Resource
 from Model import db, Event, EventSchema
 from flask_marshmallow import Marshmallow
 
-event_schema = EventSchema(many=True)
 ma = Marshmallow()
 
 
 class EventResource(Resource):
     def get(self):
+        event_schema = EventSchema(many=True)
         query = Event.query
 
         if 'id' in request.args:
@@ -32,6 +32,7 @@ class EventResource(Resource):
         return {'status': 'success', 'data': events}, 200
 
     def post(self):
+        event_schema = EventSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
@@ -57,6 +58,7 @@ class EventResource(Resource):
         return {"status": 'success', 'data': result}, 201
 
     def put(self):
+        event_schema = EventSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
@@ -78,6 +80,7 @@ class EventResource(Resource):
         return {"status": 'success', 'data': result}, 204
 
     def delete(self):
+        event_schema = EventSchema()
         json_data = request.get_json(force=True)
         if not json_data:
             return {'message': 'No input data provided'}, 400
