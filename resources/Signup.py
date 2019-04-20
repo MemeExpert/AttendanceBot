@@ -9,7 +9,9 @@ ma = Marshmallow()
 class SignupResource(Resource):
     def get(self):
         signup_schema = SignupSchema(many=True)
-        query = Signup.query
+        query = Signup.query\
+            .join(Event, Event.id == Signup.event_id)\
+            .join(User, User.id == Signup.user_id)
 
         if 'id' in request.args:
             query = query.filter_by(id=request.args['id'])
@@ -24,14 +26,14 @@ class SignupResource(Resource):
             query = query.filter_by(response=request.args['response'])
 
         if 'userDisplayName' in request.args:
-            query = query.join(User).filter(User.displayName == request.args['userDisplayName'])
+            query = query.filter(User.displayName == request.args['userDisplayName'])
 
         if 'eventName' in request.args:
-            query = query.join(Event).filter(Event.title == request.args['eventName'])
+            query = query.filter(Event.title == request.args['eventName'])
 
         print(query)
         signups = Signup.query.all()
-        signups = signup_schema.dump(query)
+        signups = signup_schema.dump(signups)
         if not signups:
             return {'message': 'Nothing found'}, 404
         return {'status': 'success', 'data': signups}, 200

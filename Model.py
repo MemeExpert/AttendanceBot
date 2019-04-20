@@ -117,15 +117,15 @@ class EventSchema(ma.Schema):
     title = fields.String()
     creation_date = fields.DateTime()
     occurence_date = fields.DateTime()
-    creator_id = fields.Integer()
+    creator = fields.Nested(UserSchema)
 
 
 class SignupSchema(ma.Schema):
     id = fields.Integer()
     signup_date = fields.DateTime()
-    user_id = fields.Integer()
-    event_id = fields.Integer()
     response = fields.Integer()
+    user = fields.Nested(UserSchema)
+    event = fields.Nested(EventSchema)
 
 
 class VoteSchema(ma.Schema):
