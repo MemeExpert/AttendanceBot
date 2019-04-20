@@ -1,6 +1,6 @@
 from flask import request
 from flask_restful import Resource
-from Model import db, Event, EventSchema
+from Model import db, Event, EventSchema, User
 from flask_marshmallow import Marshmallow
 
 ma = Marshmallow()
@@ -9,26 +9,22 @@ ma = Marshmallow()
 class EventResource(Resource):
     def get(self):
         event_schema = EventSchema(many=True)
-        query = Event.query
+        query = Event.query.join(User, User.id == Event.creator_id)
 
         if 'id' in request.args:
-            print("filtering event by id")
             query = query.filter_by(id=request.args['id'])
-            if not query:
-                return {'message': 'Event does not exist'}, 400
 
         if 'creator_id' in request.args:
-            print("filtering event by creator_id")
             query = query.filter_by(creator_id=request.args['creator_id'])
-            if not query:
-                return {'message': 'No events created by specified user'}, 400
 
-        if len(request.args) == 0:
-            return {'message': 'No parameters specified'}, 400
+        if 'creatorDisplayName' in request.args:
+            query = query.filter(User.displayName == request.args['creatorDisplayName'])
 
         print(query)
         events = query.all()
         events = event_schema.dump(events)
+        if not events:
+            return {'message': 'Nothing found'}, 404
         return {'status': 'success', 'data': events}, 200
 
     def post(self):
