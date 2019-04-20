@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Resource
 from Model import db, Signup, SignupSchema, Event, User
 from flask_marshmallow import Marshmallow
+from sqlalchemy import func
 
 ma = Marshmallow()
 
@@ -26,10 +27,10 @@ class SignupResource(Resource):
             query = query.filter_by(response=request.args['response'])
 
         if 'userDisplayName' in request.args:
-            query = query.filter(User.displayName == request.args['userDisplayName'])
+            query = query.filter(func.lower(User.displayName) == func.lower(request.args['userDisplayName']))
 
         if 'eventName' in request.args:
-            query = query.filter(Event.title == request.args['eventName'])
+            query = query.filter(func.lower(Event.title) == func.lower(request.args['eventName']))
 
         print(query)
         signups = Signup.query.all()

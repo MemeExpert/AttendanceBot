@@ -3,7 +3,7 @@ from flask_restful import Resource
 from Model import db, User, UserSchema
 from flask_marshmallow import Marshmallow
 
-#ma = Marshmallow()
+ma = Marshmallow()
 
 
 class UserResource(Resource):

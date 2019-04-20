@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Resource
 from Model import db, Event, EventSchema, User
 from flask_marshmallow import Marshmallow
+from sqlalchemy import func
 
 ma = Marshmallow()
 
@@ -18,7 +19,7 @@ class EventResource(Resource):
             query = query.filter_by(creator_id=request.args['creator_id'])
 
         if 'creatorDisplayName' in request.args:
-            query = query.filter(User.displayName == request.args['creatorDisplayName'])
+            query = query.filter(func.lower(User.displayName) == func.lower(request.args['creatorDisplayName']))
 
         print(query)
         events = query.all()
