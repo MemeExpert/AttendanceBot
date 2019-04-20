@@ -38,6 +38,15 @@ def checkUniqueDisplayName(displayName):
         return True
     return False
 
+def buildDatetimeString(eventDate, eventTime):
+    form = '%m/%d/%Y %H:%M:%S'
+    militaryTime = datetime.datetime.strptime(eventTime, '%I:%M%p').strftime('%H:%M:%S')
+    eventDateTime = eventDate + " " + militaryTime
+    eventDateTime = datetime.datetime.strptime(eventDateTime, form)
+
+    return eventDateTime
+
+
 @bot.command()
 async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
     """Create an attendance poll given an event *INCOMPLETE*"""
@@ -172,23 +181,52 @@ async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this
         else:
             await ctx.send("I didn't recognize that date format. Keep it like 'MM/DD' (cancel event by typing `cancel`)")
         
-    await ctx.send("OK thanks, saving `"+ eventName + "` at `" + eventTime + "` on `" + eventDate + "`")
-
     creatorId = ctx.author.id
+    eventDate = eventDate + "/2019"
+    eventDatetime = buildDatetimeString(eventDate, eventTime)
+    print(eventDatetime)
     # NOTE: At this point we have eventName, eventTime, eventDate, creatorId
     # call api HERE with these strings to save them
+
+    # first get user's id based on discord id
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":creatorId})
+    if r.json().get("data"):
+        id = r.json()["data"][0]["id"]
+
+    params = {"title":eventName,"occurence_date": eventDatetime,"creator_id":id}
+    def converter(t):
+        if isinstance(t,datetime.datetime):
+            return t.__str__()
+    r = requests.request('POST','http://127.0.0.1:5000/api/event', data = json.dumps(params, default=converter))
+    print(params)
+    if r.status_code == 201:
+        await ctx.send("OK thanks, saved `"+ eventName + "` at `" + eventTime + "` on `" + eventDate + "`")
+    else:
+        await ctx.send("There was a problem trying to save the information :wrench:")
+
 
 @bot.command()
 async def my_events(ctx):
     """See the events you've created *INCOMPLETE*"""
     user = ctx.author
-    # embed = discord.Embed(title="Your events", description='Results: \n ' + results, colour=0xDEADBF)
     await ctx.author.send("Grabbing your events {0.name}...".format(user))
-    
-    print(user.id)
-    # NOTE: Call API to get a user's created events as well as events they are attending
-    # Parameter:
-    #       user.id
+
+    r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":user.id})
+    if r.json().get("data"):
+        id = r.json()["data"][0]["id"]
+
+    r = requests.request('GET','http://127.0.0.1:5000/api/event', params = {"creator_id":id})
+    if r.json().get("data"):
+        eventList = r.json()["data"]
+        results = ""
+        for event in eventList:
+            dateobj = datetime.datetime.strptime(event["occurence_date"][:-6], "%Y-%m-%dT%H:%M:%S")
+            date = dateobj.strftime("%H:%M on %m/%d/%Y")
+            results = results + '\n `' + event["title"] + "` at " + date
+        embed = discord.Embed(title="Your events", description='Results: \n ' + results, colour=0xDEADBF)
+        await ctx.send("Here you go: ", embed=embed)
+    else:
+        await ctx.send("Couldn't find any events created by you")
 
 
 # gets user by the id in db, not discord user id, pretty useless was for testing connection
@@ -279,5 +317,5 @@ async def update(ctx, *text):
         #await ctx.author.send("Thanks {0}, your display name has been updated".format(displayName))
         await ctx.message.add_reaction('✅')
 
-bot.run(config.DiscordBotToken)
+bot.run(config.discordToken)
 
