@@ -35,6 +35,7 @@ class Event(db.Model):
                            nullable=False)
     creator = db.relationship('User',
                               backref=db.backref('events', lazy='dynamic'))
+    announced = db.Column(db.Integer, server_default="0", nullable=False)
 
     def __init__(self, title, occurence_date, creator_id):
         self.title = title
@@ -117,6 +118,7 @@ class EventSchema(ma.Schema):
     title = fields.String()
     creation_date = fields.DateTime()
     occurence_date = fields.DateTime()
+    announced = fields.Integer()
     creator = fields.Nested(UserSchema)
 
 
