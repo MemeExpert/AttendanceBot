@@ -185,8 +185,6 @@ async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this
     eventDate = eventDate + "/2019"
     eventDatetime = buildDatetimeString(eventDate, eventTime)
     print(eventDatetime)
-    # NOTE: At this point we have eventName, eventTime, eventDate, creatorId
-    # call api HERE with these strings to save them
 
     # first get user's id based on discord id
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":creatorId})
@@ -207,13 +205,15 @@ async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this
 
 @bot.command()
 async def my_events(ctx):
-    """See the events you've created *INCOMPLETE*"""
+    """See the events you've created"""
     user = ctx.author
-    await ctx.author.send("Grabbing your events {0.name}...".format(user))
 
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":user.id})
     if r.json().get("data"):
         id = r.json()["data"][0]["id"]
+    else:
+        await ctx.send("I couldn't find you registered in the system. Try `!register`")
+        return
 
     r = requests.request('GET','http://127.0.0.1:5000/api/event', params = {"creator_id":id})
     if r.json().get("data"):
