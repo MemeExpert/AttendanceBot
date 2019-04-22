@@ -15,16 +15,16 @@ class SignupResource(Resource):
             .join(User, User.id == Signup.user_id)
 
         if 'id' in request.args:
-            query = query.filter_by(id=request.args['id'])
+            query = query.filter(Signup.id == request.args['id'])
 
         if 'user_id' in request.args:
-            query = query.filter_by(user_id=request.args['user_id'])
+            query = query.filter(Signup.user_id == request.args['user_id'])
 
         if 'event_id' in request.args:
-            query = query.filter_by(event_id=request.args['event_id'])
+            query = query.filter(Signup.event_id == request.args['event_id'])
 
         if 'response' in request.args:
-            query = query.filter_by(response=request.args['response'])
+            query = query.filter(Signup.response == request.args['response'])
 
         if 'userDisplayName' in request.args:
             query = query.filter(func.lower(User.displayName) == func.lower(request.args['userDisplayName']))
@@ -32,8 +32,8 @@ class SignupResource(Resource):
         if 'eventName' in request.args:
             query = query.filter(func.lower(Event.title) == func.lower(request.args['eventName']))
 
-        print(query)
-        signups = Signup.query.all()
+        # print(query)
+        signups = query.all()
         signups = signup_schema.dump(signups)
         if not signups:
             return {'message': 'Nothing found'}, 404

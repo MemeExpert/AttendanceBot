@@ -35,7 +35,7 @@ class Event(db.Model):
                            nullable=False)
     creator = db.relationship('User',
                               backref=db.backref('events', lazy='dynamic'))
-    announced = db.Column(db.Integer, server_default="0", nullable=False)
+    announceMessageId = db.Column(BIGINT(unsigned=True), server_default="0", nullable=False, unique=True)
 
     def __init__(self, title, occurence_date, creator_id):
         self.title = title
@@ -112,22 +112,34 @@ class UserSchema(ma.Schema):
     slackName = fields.Str()
     discordUserId = fields.Integer()
 
+    class Meta:
+        ordered = True
+
 
 class EventSchema(ma.Schema):
     id = fields.Integer()
     title = fields.String()
     creation_date = fields.DateTime()
     occurence_date = fields.DateTime()
-    announced = fields.Integer()
+    announceMessageId = fields.Integer()
+    creator_id = fields.Integer()
     creator = fields.Nested(UserSchema)
+
+    class Meta:
+        ordered = True
 
 
 class SignupSchema(ma.Schema):
     id = fields.Integer()
     signup_date = fields.DateTime()
     response = fields.Integer()
+    user_id = fields.Integer()
+    event_id = fields.Integer()
     user = fields.Nested(UserSchema)
     event = fields.Nested(EventSchema)
+
+    class Meta:
+        ordered = True
 
 
 class VoteSchema(ma.Schema):
@@ -136,14 +148,23 @@ class VoteSchema(ma.Schema):
     user_id = fields.Integer(required=True)
     vote_id = fields.Integer(required=True)
 
+    class Meta:
+        ordered = True
+
 
 class PollSchema(ma.Schema):
     id = fields.Integer()
     title = fields.String(required=True, validate=validate.Length(1))
     creation_date = fields.DateTime()
 
+    class Meta:
+        ordered = True
+
 
 class Poll_OptionsSchema(ma.Schema):
     id = fields.Integer()
     title = fields.String(required=True, validate=validate.Length(1))
     creation_date = fields.DateTime()
+
+    class Meta:
+        ordered = True

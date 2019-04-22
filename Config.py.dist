@@ -8,7 +8,9 @@ DatabasePassword = ""
 DatabaseName = ""
 
 # Discord Bot Config
-DiscordBotToken = ""
+discordToken = ""
+# Channel ID where the bot will live
+discordChannelId = 568546853893832774
 
 # Slack Bot Config
 SlackBotToken = ""

@@ -13,10 +13,10 @@ class EventResource(Resource):
         query = Event.query.join(User, User.id == Event.creator_id)
 
         if 'id' in request.args:
-            query = query.filter_by(id=request.args['id'])
+            query = query.filter(Event.id == request.args['id'])
 
         if 'creator_id' in request.args:
-            query = query.filter_by(creator_id=request.args['creator_id'])
+            query = query.filter_by(Event.creator_id == request.args['creator_id'])
 
         if 'title' in request.args:
             query = query.filter(func.lower(Event.title) == func.lower(request.args['title']))
@@ -24,7 +24,10 @@ class EventResource(Resource):
         if 'creatorDisplayName' in request.args:
             query = query.filter(func.lower(User.displayName) == func.lower(request.args['creatorDisplayName']))
 
-        print(query)
+        if 'announceMessageId' in request.args:
+            query = query.filter(Event.announceMessageId == request.args['announceMessageId'])
+
+        # print(query)
         events = query.all()
         events = event_schema.dump(events)
         if not events:

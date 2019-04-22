@@ -30,7 +30,7 @@ class UserResource(Resource):
         if len(request.args) == 0:
             return {'message': 'No parameters specified'}, 400
 
-        print(query)
+        # print(query)
         users = query.all()
         users = user_schema.dump(users)
         if not users:

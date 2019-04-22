@@ -9,6 +9,7 @@ import datetime
 import time
 import requests
 import json
+import pymysql
 
 # This is for logging into a discord.log file
 """ logger = logging.getLogger('discord')
@@ -19,6 +20,51 @@ logger.addHandler(handler) """
 
 description = '''First iteration of discord attendance bot'''
 bot = commands.Bot(command_prefix='!', description=description)
+
+
+# Periodically check for new Events
+async def search_and_post_events():
+    while(True):
+        # wait for a minute before checking again for new events
+        print("Waiting 120s before checking for new events")
+        await asyncio.sleep(120)
+        # Get all pending events that haven't expired and haven't been announced yet
+        db.execute("SELECT * FROM event WHERE announceMessageId = 0 AND occurence_date > NOW() ORDER BY occurence_date ASC LIMIT 1;")
+        res = db.fetchone()
+        # no unannounced events - nothing to do
+        if not res:
+            print("No new events")
+            continue
+
+        eventId = res['id']
+        channel = bot.get_channel(config.discordChannelId)
+        message = await channel.send("**{0}** scheduled for *{1}*\nChoose a reaction to sign up".format(
+            res['title'],
+            res['occurence_date'].strftime("%a - %m/%d at %I:%M%p")))
+
+        # add user react options
+        reacts = {'⚠', '❌', '✅'}
+        for r in reacts:
+            await message.add_reaction(r)
+
+        sqlString = "UPDATE event SET announceMessageId = {0} WHERE id = {1}".format(message.id, eventId)
+        print(sqlString)
+        db.execute(sqlString)
+        dbCon.commit()
+
+bot.loop.create_task(search_and_post_events())
+
+# init mysql connection
+dbCon = pymysql.connect(
+    host=config.DatabaseHost,
+    port=config.DatabasePort,
+    user=config.DatabaseUser,
+    passwd=config.DatabasePassword,
+    database=config.DatabaseName
+)
+
+# init mysql cursor (for making queries)
+db = dbCon.cursor(pymysql.cursors.DictCursor)
 
 @bot.event
 async def on_ready():
@@ -317,5 +363,67 @@ async def update(ctx, *text):
         #await ctx.author.send("Thanks {0}, your display name has been updated".format(displayName))
         await ctx.message.add_reaction('✅')
 
-bot.run(config.discordToken)
+@bot.event
+async def on_raw_reaction_add(payload):
+    if bot.user.id == payload.user_id:
+        return
 
+    reacts = {'⚠':0, '❌':1, '✅':2}
+    if payload.emoji.name not in reacts:
+        return
+
+    # print("user ID {0} reacted to message {1}!".format(payload.user_id, payload.message_id))
+
+    # try to get an event thats associated with the message ID that the user reacted to
+    r = requests.request('GET','http://127.0.0.1:5000/api/event', params = {"announceMessageId":payload.message_id})
+
+    # got something - this is an event message
+    if r.json().get("data"):
+        data = r.json()["data"]
+        eventId = data[0]["id"]
+
+        userId = 0
+        # make sure the user that is reacting is registered with our service
+        r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":payload.user_id})
+        if r.json().get("data"):
+            data = r.json()["data"]
+            userId = data[0]["id"]
+        # user is not registered - tell them to do so and then bail
+        else:
+            user = discord.utils.get(client.get_all_members(), id=payload.user_id)
+            await bot.send_message(user, "Hi {0}! You aren't registered, so you can't sign up for events yet.\nType `!register YOURNAME` to get registered!")
+            return
+
+        print("Checking if id {0} is signed up for event {1}".format(userId, eventId))
+
+        # check if the user is already signed up
+        r = requests.request('GET','http://127.0.0.1:5000/api/signup', params = {
+            "event_id" : eventId,
+            "user_id"  : userId
+            })
+
+        # user is already signed up, so replace their signup status with the new one
+        if r.json().get("data"):
+            data = r.json()["data"]
+            signupId = data[0]["id"]
+
+            r = requests.request('PUT','http://127.0.0.1:5000/api/signup', json = {
+            "id": signupId,
+            "event_id" : eventId,
+            "user_id"  : userId,
+            "response": reacts[payload.emoji.name]
+            })
+        # user isn't signed up, so just add their signup
+        else:
+            r = requests.request('POST','http://127.0.0.1:5000/api/signup', json = {
+            "event_id" : eventId,
+            "user_id"  : userId,
+            "response": reacts[payload.emoji.name]
+            })
+
+    # otherwise its just a random react, so ignore it
+    else:
+        return
+
+# Start discord.py bot service
+bot.run(config.discordToken)
