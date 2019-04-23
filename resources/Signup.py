@@ -12,7 +12,8 @@ class SignupResource(Resource):
         signup_schema = SignupSchema(many=True)
         query = Signup.query\
             .join(Event, Event.id == Signup.event_id)\
-            .join(User, User.id == Signup.user_id)
+            .join(User, User.id == Signup.user_id)\
+            .order_by(Signup.response)
 
         if 'id' in request.args:
             query = query.filter(Signup.id == request.args['id'])

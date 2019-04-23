@@ -26,16 +26,18 @@ bot = commands.Bot(command_prefix='!', description=description)
 async def search_and_post_events():
     while(True):
         # wait for a minute before checking again for new events
-        print("Waiting 120s before checking for new events")
-        await asyncio.sleep(120)
+        #print("Waiting 120s before checking for new events")
+        await asyncio.sleep(10)
         # Get all pending events that haven't expired and haven't been announced yet
         db.execute("SELECT * FROM event WHERE announceMessageId = 0 AND occurence_date > NOW() ORDER BY occurence_date ASC LIMIT 1;")
+        dbCon.commit()
         res = db.fetchone()
         # no unannounced events - nothing to do
         if not res:
             print("No new events")
             continue
 
+        print("Found new event - posting now")
         eventId = res['id']
         channel = bot.get_channel(config.discordChannelId)
         message = await channel.send("**{0}** scheduled for *{1}*\nChoose a reaction to sign up".format(
@@ -48,7 +50,7 @@ async def search_and_post_events():
             await message.add_reaction(r)
 
         sqlString = "UPDATE event SET announceMessageId = {0} WHERE id = {1}".format(message.id, eventId)
-        print(sqlString)
+        # print(sqlString)
         db.execute(sqlString)
         dbCon.commit()
 
@@ -173,6 +175,52 @@ async def poll(ctx, *, text): # , *emojis: discord.Emoji):      # Add this to us
     await ctx.send("Your recent poll:", embed=embed)
     # NOTE: Also grabs other reactions that user might have added to message
 
+@bot.command()
+async def event_signups(ctx, *text):
+    n = len(text)
+    if n == 0 or text[0] == "help":
+        await ctx.send("Get info about an event, given an event ID (from !my_events): `!event_info [Event ID]`")
+        return
+
+    event_id = text[0]
+    event_name = ""
+    event_datetimeStr = ""
+    r = requests.request('GET','http://127.0.0.1:5000/api/event', params = {"id":event_id})
+    if r.json().get("data"):
+        event = r.json()["data"][0]
+        dateobj = datetime.datetime.strptime(event["occurence_date"][:-6], "%Y-%m-%dT%H:%M:%S")
+        event_datetimeStr = dateobj.strftime("%a - %m/%d at %I:%M%p")
+
+        event_name = event["title"]
+    else:
+        await ctx.send("There is no event with id {0}!".format(event_id))
+        return
+
+    reacts = {0 : '⚠', 1 : '❌', 2 : '✅'}
+    await ctx.send("Grabbing signups for event #{0}...".format(event_id))
+    r = requests.request('GET','http://127.0.0.1:5000/api/signup', params = {"event_id":event_id})
+    if r.json().get("data"):
+        signupList = r.json()["data"]
+        results = ""
+
+        for signup in signupList:
+            dateobj = datetime.datetime.strptime(signup["signup_date"][:-6], "%Y-%m-%dT%H:%M:%S")
+            date = dateobj.strftime("%m/%d at %I:%M%p")
+
+            results += "{0} - {1} responded on {2}\n".format(
+                reacts[signup["response"]],
+                signup["user"]["displayName"],
+                date)
+        embed = discord.Embed(
+            title="Signups for Event #{0} ({1} on {2})".format(event_id, event_name, event_datetimeStr),
+            description='Results:\n ' + results,
+            colour=0xDEADBF)
+        await ctx.send("Here you go: ", embed=embed)
+    else:
+        await ctx.send("There are no signups for that event!")
+        return
+
+    
 
 @bot.command()
 async def create_event(ctx, *text): # , *emojis: discord.Emoji):      # Add this to use custom server emojis as a paramter in the command
@@ -260,6 +308,9 @@ async def my_events(ctx):
     r = requests.request('GET','http://127.0.0.1:5000/api/user', params = {"discordUserId":user.id})
     if r.json().get("data"):
         id = r.json()["data"][0]["id"]
+    else:
+        await ctx.send("You need to !register first!")
+        return
 
     r = requests.request('GET','http://127.0.0.1:5000/api/event', params = {"creator_id":id})
     if r.json().get("data"):
@@ -267,8 +318,8 @@ async def my_events(ctx):
         results = ""
         for event in eventList:
             dateobj = datetime.datetime.strptime(event["occurence_date"][:-6], "%Y-%m-%dT%H:%M:%S")
-            date = dateobj.strftime("%H:%M on %m/%d/%Y")
-            results = results + '\n `' + event["title"] + "` at " + date
+            date = dateobj.strftime("%a - %m/%d at %I:%M%p")
+            results = results + '\n**' + str(event["id"]) + '** `' + event["title"] + "` on " + date
         embed = discord.Embed(title="Your events", description='Results: \n ' + results, colour=0xDEADBF)
         await ctx.send("Here you go: ", embed=embed)
     else:

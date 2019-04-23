@@ -16,7 +16,7 @@ class EventResource(Resource):
             query = query.filter(Event.id == request.args['id'])
 
         if 'creator_id' in request.args:
-            query = query.filter_by(Event.creator_id == request.args['creator_id'])
+            query = query.filter(Event.creator_id == request.args['creator_id'])
 
         if 'title' in request.args:
             query = query.filter(func.lower(Event.title) == func.lower(request.args['title']))
