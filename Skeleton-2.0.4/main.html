@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>EventBot</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+
+</head>
+<body>
+
+  <!-- Script
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+  <script>
+  function showDiv() {
+    document.getElementById('api-display').style.display = "block";
+  }
+</script>
+  <script src="scripts.js"></script>
+
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+  <div class="form-box">
+    <h1>Event Creator</h1>
+    <p>Additional description here.</p>
+    <form action="/api_call_php" method="post">
+      <fieldset>
+        <label for="name">Event Name</label>
+        <input id="name" type="text" name="Name">
+
+        <label for="email">Event Attendees</label>
+        <input id="email" type="email" name="Email">
+
+        <label for="message">Event Description</label>
+        <textarea id="message" name="Message"></textarea>
+        <input class="button-primary" type="button" value="Submit" />
+      </fieldset>
+    </form>
+  </div>
+
+  <div class="form-box">
+    <h1>Event Finder</h1>
+    <p>Search for events by event name</p>
+    <form action="/api_call_php" method="post">
+      <fieldset>
+        <label for="name">Event Name</label>
+        <input id="name" type="text" name="Name">
+
+        <input class="button-primary" type="button" onclick="showDiv()" value="Submit" />
+      </fieldset>
+    </form>
+  </div>
+
+<div id="api-display" style="display:none;" >
+  <h1>Event Name call goes here</h1>
+  <h3>Event Description call goes here</h3>
+  <table class="u-full-width">
+    <thead>
+       <tr>
+         <th>Attendee Name</th>
+         <th>Attendance status</th>
+         <th>Timestamp</th>
+       </tr>
+    </thead>
+
+ <tr>
+   <td>iden</td>
+   <td>yes</td>
+   <td>12:15:07</td>
+ </tr>
+ <tr>
+   <td>steven</td>
+   <td>no</td>
+   <td>09:04:54</td>
+ </tr>
+</table>
+</div>
+
+
+
+
+  <!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>
