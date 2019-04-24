@@ -42,6 +42,7 @@ class EventResource(Resource):
 
         # Validate and deserialize input
         data = event_schema.load(json_data)
+        print(data)
         # if errors:
         #    return errors, 422
         event = Event.query.filter_by(title=data['title'],

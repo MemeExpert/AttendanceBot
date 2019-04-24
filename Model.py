@@ -35,7 +35,7 @@ class Event(db.Model):
                            nullable=False)
     creator = db.relationship('User',
                               backref=db.backref('events', lazy='dynamic'))
-    announceMessageId = db.Column(BIGINT(unsigned=True), server_default="0", nullable=False, unique=True)
+    announceMessageId = db.Column(BIGINT(unsigned=True), server_default="0", nullable=False)
 
     def __init__(self, title, occurence_date, creator_id):
         self.title = title
